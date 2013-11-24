@@ -1,0 +1,19 @@
+{
+  "author": "Tom Rawcliffe <tom.rawcliffe@gmail.com>",
+  "name": "streamer",
+  "description": "pcap tcp stream analizer",
+  "version": "0.0.0",
+  "repository": {
+    "url": ""
+  },
+  "main": "streamer.js",
+  "dependencies": {
+    "commander": "~2.1.0",
+    "pcap-parser": "~0.2.1"
+  },
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}

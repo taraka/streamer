@@ -1,29 +1,32 @@
+var program = require('commander');
 var pcapp = require('pcap-parser');
+var IpParser = require('./parsers/ip');
 
-var parser = pcapp.parse('capture.pcap');
+var Streamer = function() {
+	program.version('0.0.0')
+		.option('-f, --file <file>', 'Input file')
+		.parse(process.argv);
 
-parser.on('packet', function(packet) {
-	var data = packet.data.slice(14);
-	var packet = {
-		ip:{}
-	};
+	this.ipParser = new IpParser();
+}
 
-	var headerLength = data.readUInt8(0) & 7;
-	console.log('headerLength ' + headerLength);
-	console.log('Found packet: ' + data.readUInt16BE(4));
-	packet.ip.len = data.readUInt16BE(2);
-	packet.ip.ident = data.readUInt16BE(4);
-	packet.ip.ttl = data.readUInt8(8);
+Streamer.prototype.start = function() {
 
-	packet.ip.protocol = getProtocolName(data.readUInt8(9));
-	packet.ip.srcAddr = data.readUInt8(12) + '.' + data.readUInt8(13) + '.' + data.readUInt8(14) + '.' + data.readUInt8(15);
-	packet.ip.destAddr = data.readUInt8(16) + '.' + data.readUInt8(17) + '.' + data.readUInt8(18) + '.' + data.readUInt8(19);
-
-	switch(packet.ip.protocol) {
-		case 'tcp':
-			addTcpData(packet, data.slice(headerLength * 4));
-			break;
+	if (!program.file) {
+		console.error('Error input file not supplied');
+		program.help();
+		process.exit(127);
 	}
+
+	console.log('Starting packet analysis on file ' + program.file);
+	var parser = pcapp.parse(program.file);
+	parser.on('packet', this.processPacket.bind(this));
+};
+
+Streamer.prototype.processPacket = function(packet) {
+
+	packet = this.ipParser.parse(packet.data.slice(14));
+
 
 	console.dir(packet);
 
@@ -40,75 +43,9 @@ parser.on('packet', function(packet) {
 	}*/
 
 	console.log("\n\n\n");
-})
 
-function getProtocolName(protocol) {
-	switch(protocol) {
-		case 6:
-			return 'tcp';
-			break;
-		case 1:
-			return 'icmp';
-			break;
-		case 17:
-			return 'udp';
-			break;
-		default: 
-			return 'unknown';
+};
 
-	}
-}
+var app = new Streamer();
+app.start();
 
-function addTcpData(packet, data) {
-	packet.tcp = {}
-
-	packet.tcp.srcPort = data.readUInt16BE(0);
-	packet.tcp.destPort = data.readUInt16BE(2);
-	packet.tcp.seqNum = data.readUInt32BE(4);
-	packet.tcp.ackNum = data.readUInt32BE(8);
-
-	var headerLength = (data.readUInt8(12) & 240) >> 4;
-
-	packet.tcp.flags = getTcpFlags(data.readUInt8(13));
-	packet.tcp.ackNum = data.readUInt32BE(8);
-
-	//packet.data = data.slice(headerLength * 4).toString();
-}
-
-function getTcpFlags(input) {
-	var flags = {};
-
-	if (input & 1) {
-		flags.FIN = true;
-	}
-
-	if (input & 2) {
-		flags.SYN = true;
-	}
-
-	if (input & 4) {
-		flags.RST = true;
-	}
-
-	if (input & 8) {
-		flags.PSH = true;
-	}
-
-	if (input & 16) {
-		flags.ACK = true;
-	}
-
-	if (input & 32) {
-		flags.URG = true;
-	}
-
-	if (input & 64) {
-		flags.ECE = true;
-	}
-
-	if (input & 128) {
-		flags.CWR = true;
-	}
-
-	return flags;
-}
