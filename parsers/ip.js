@@ -5,15 +5,12 @@ var Ip = function() {
 	this.tcpParser = new TcpParser();
 };
 
-Ip.prototype.parse = function(data) {
+Ip.prototype.parse = function(packet, data) {
 
-	var packet = {
-		ip:{}
-	};
+	packet.ip = {};
 
 	var headerLength = data.readUInt8(0) & 7;
-	
-	console.log('Found packet: ' + data.readUInt16BE(4));
+
 	packet.ip.len = data.readUInt16BE(2);
 	packet.ip.ident = data.readUInt16BE(4);
 	packet.ip.ttl = data.readUInt8(8);
@@ -32,9 +29,7 @@ Ip.prototype.parse = function(data) {
 
 	if (dataParser) {
 		dataParser.parse(packet, data.slice(headerLength * 4));
-	}
-
-	return packet;
+	};
 }
 
 Ip.prototype.getProtocolName = function(protocol) {

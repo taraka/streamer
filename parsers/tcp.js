@@ -1,4 +1,6 @@
 
+var _ = require('lodash');
+
 var Tcp = function() {};
 
 Tcp.prototype.parse = function(packet, data) {
@@ -12,6 +14,8 @@ Tcp.prototype.parse = function(packet, data) {
 	var headerLength = (data.readUInt8(12) & 240) >> 4;
 
 	packet.tcp.flags = this.getTcpFlags(data.readUInt8(13));
+
+	packet.tcp.flagsString = (_.keys(packet.tcp.flags)).join(' ');
 	packet.tcp.ackNum = data.readUInt32BE(8);
 
 	packet.data = data.slice(headerLength * 4);

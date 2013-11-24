@@ -9,7 +9,12 @@
   "main": "streamer.js",
   "dependencies": {
     "commander": "~2.1.0",
-    "pcap-parser": "~0.2.1"
+    "pcap-parser": "~0.2.1",
+    "express": "~3.4.4",
+    "mustache": "~0.7.3",
+    "consolidate": "~0.10.0",
+    "lodash": "~2.3.0",
+    "htmlencode": "0.0.3"
   },
   "devDependencies": {},
   "optionalDependencies": {},

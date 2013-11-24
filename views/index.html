@@ -1,0 +1,59 @@
+<!doctype html>
+<html>
+<head>
+	<title>Streamer</title>
+
+	<style>
+th {
+	text-align: left;
+}
+.client-data {
+	color: green;
+}
+
+.server-data {
+	color: blue;
+}
+	</style>
+}
+</head>
+<body>
+	<h1>Streamer</h1>
+
+	{{#streams}}
+		<div>
+			<span>{{srcAddr}}:{{srcPort}} -> {{destAddr}}:{{destPort}} </span>
+			<span> {{packets.length}} Packets</span>
+			<span class="js-showPackets">Show packets</span>
+			<span class="js-dataPackets">Show data</span>
+
+				<table width="100%">
+					<tr>
+						<th width="10%">Time</th>
+						<th width="5%">Ip ident</th>
+						<th width="5%">Protocol</th>
+						<th width="10%">Source</th>
+						<th width="10%">Destination</th>
+						<th width="5%">Size</th>
+						<th width="10%">Flags</th>
+					</tr>
+					{{#packets}}
+						<tr>
+							<td>{{header.time}}</td>
+							<td>{{ip.ident}}</td>
+							<td>{{ip.protocol}}/ip</td>
+							<td>{{ip.srcAddr}}:{{tcp.srcPort}} <br />
+							<small>{{ethernet.srcMAC}}</small></td>
+							<td>{{ip.destAddr}}:{{tcp.destPort}}  <br />
+							<small>{{ethernet.destMAC}}</small></td>
+							<td>{{header.originalLength}} bytes</td>
+							<td width="10%">{{tcp.flagsString}}</td>
+						</tr>
+					{{/packets}}
+				</table>
+
+				<div>{{& data}}</div>
+		</div>
+	{{/streams}}
+</body>
+</html>
