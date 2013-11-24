@@ -17,6 +17,11 @@ EthernetParser.prototype.parse = function(packet, data) {
 
 	data = data.slice(12);
 
+	if (data.readUInt16BE(0) == 0x8100) {
+		packet.ethernet.vlan = data.readUInt16BE(0) & 4095;
+		data = data.slice(4);
+	}
+
 	this.ipParser.parse(packet, data.slice(2));
 }
 
