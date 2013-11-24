@@ -24,15 +24,13 @@ th {
 </head>
 <body>
 	<h1>Streamer</h1>
-
-	{{#streams}}
+		{{#stream}}
 		<div>
 			<h2>
 				<span>{{srcAddr}}:{{srcPort}} -> {{destAddr}}:{{destPort}} </span>
-				<span><a href="/stream/{{streamIndex}}">{{numPackets}} Packets</a></span>
-			</h2>1
-			<span class="js-showPackets">Show packets</span>
-			<span class="js-dataPackets">Show data</span>
+				<span> {{packets.length}} Packets</span>
+				<a href="/">Back</a>
+			</h2>
 
 				<table width="100%">
 					<tr>
@@ -42,25 +40,27 @@ th {
 						<th width="10%">Source</th>
 						<th width="10%">Destination</th>
 						<th width="5%">Size</th>
-						<th width="10%">Flags</th>
+						<th width="5%">Flags</th>
+						<th width="5%">vlan</th>
 					</tr>
 					{{#packets}}
 						<tr>
 							<td>{{header.time}}</td>
-							<td><a href="#frame-data-{{ip.ident}}">{{ip.ident}}</a></td>
+							<td><a href="/stream/{{streamIndex}}/packet/{{packetIndex}}">{{ip.ident}}</a></td>
 							<td>{{ip.protocol}}/ip</td>
 							<td>{{ip.srcAddr}}:{{tcp.srcPort}} <br />
 							<small>{{ethernet.srcMAC}}</small></td>
 							<td>{{ip.destAddr}}:{{tcp.destPort}}  <br />
 							<small>{{ethernet.destMAC}}</small></td>
 							<td>{{header.originalLength}} bytes</td>
-							<td width="10%">{{tcp.flagsString}}</td>
+							<td>{{tcp.flagsString}}</td>
+							<td>{{ethernet.vlan}}</td>
 						</tr>
 					{{/packets}}
 				</table>
 
-				<div>{{& data}}</div>
+				<div><pre>{& data}}</pre></div>
 		</div>
-	{{/streams}}
+		{{/stream}}
 </body>
 </html>

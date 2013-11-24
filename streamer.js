@@ -46,12 +46,16 @@ Streamer.prototype.processPacket = function(frame) {
 	this.ethParser.parse(packet, frame.data);
 
 	var stream = this.findStream(packet);
+	packet.packetIndex = stream.packets.length;
+	stream.numPackets = stream.packets.length;
 	stream.packets.push(packet);
+	this.packets.push(packet);
 
 	//stream.packets.inspect = function() {return this.length.toString();};
 
-
-	/*for(var i=0; i<64; i++) {
+/*console.dir(packet);
+var data = frame.data.streamlice(14);
+	for(var i=0; i<64; i++) {
 		if (typeof data[i] != 'undefined') {
 			var str = data[i].toString(2);
 			var pad = Array(9 - str.length).join('0');
@@ -60,8 +64,10 @@ Streamer.prototype.processPacket = function(frame) {
 				process.stdout.write("\n");
 			}
 		}
-	}*/
+	}
 
+	process.stdout.write("\n\n\n\n");
+*/
 };
 
 Streamer.prototype.createServer = function() {
@@ -99,13 +105,40 @@ Streamer.prototype.createServer = function() {
     }));
 
 	this.server.get('/', function(req, res) {
-		res.render('index.html', {streams: self.streams});
+		res.render('index.html', {streams: self.getStreamsData()});
 	});
+	this.server.get('/stream/:stream', function(req, res) {
+		res.render('stream.html', {stream: self.getStreamData(req.params.stream)});
+	});
+	this.server.get('/stream/:stream/packet/:packet', function(req, res) {
+		res.render('packet.html', {
+			packet: self.getPacketFromStream(req.params.stream, req.params.packet),
+			streamIndex: req.params.stream
+		});
+	});
+};
+
+Streamer.prototype.getStreamsData = function() {
+	return _.map(this.streams, function(stream) {
+		return _.omit(stream, ['packets']);
+	});
+}
+
+Streamer.prototype.getStreamData = function(index) {
+	return this.streams[index];
+}
+
+Streamer.prototype.getPacketFromStream = function(streamIndex, packetIndex) {
+	var packet = this.streams[streamIndex].packets[packetIndex];
+	packet.decode = htmlencode.htmlEncode(packet.data.toString());
+	return packet;
 };
 
 Streamer.prototype.fileComplete = function() {
 
-	for (var i=0; i<this.streams.length; i++) {
+	console.log('Finished parsing packets');
+
+	/*for (var i=0; i<this.streams.length; i++) {
 		var stream = this.streams[i];
 
 		var currentHost;
@@ -129,8 +162,8 @@ Streamer.prototype.fileComplete = function() {
 		if (stream.data) {
 			stream.data += '</pre></div>'
 		}
-	}
-	console.log(util.inspect(this.streams, 1, 5, 1));
+	}*/
+	//console.log(util.inspect(this.streams, 1, 5, 1));
 };
 
 Streamer.prototype.findStream = function(packet) {
@@ -138,6 +171,7 @@ Streamer.prototype.findStream = function(packet) {
 	var stream = {};
 	var newStream = (function() {
 		stream = {
+			streamIndex: this.streams.length,
 			srcAddr: packet.ip.srcAddr,
 			srcPort: packet.tcp.srcPort,
 			destAddr: packet.ip.destAddr,
