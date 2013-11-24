@@ -12,7 +12,7 @@ Ip.prototype.parse = function(data) {
 	};
 
 	var headerLength = data.readUInt8(0) & 7;
-	console.log('headerLength ' + headerLength);
+	
 	console.log('Found packet: ' + data.readUInt16BE(4));
 	packet.ip.len = data.readUInt16BE(2);
 	packet.ip.ident = data.readUInt16BE(4);

@@ -8,6 +8,7 @@ var Streamer = function() {
 		.parse(process.argv);
 
 	this.ipParser = new IpParser();
+	this.streams = [];
 }
 
 Streamer.prototype.start = function() {
@@ -27,8 +28,8 @@ Streamer.prototype.processPacket = function(packet) {
 
 	packet = this.ipParser.parse(packet.data.slice(14));
 
-
-	console.dir(packet);
+	var stream = this.findStream(packet);
+	stream.packets.push(packet);
 
 
 	/*for(var i=0; i<64; i++) {
@@ -42,7 +43,45 @@ Streamer.prototype.processPacket = function(packet) {
 		}
 	}*/
 
-	console.log("\n\n\n");
+	console.dir(this.streams);
+
+};
+
+Streamer.prototype.findStream = function(packet) {
+
+	var stream = {};
+	var newStream = function() {
+		stream = {
+			srcAddr: packet.ip.srcAddr,
+			srcPort: packet.ip.srcPort,
+			destAddr: packet.ip.destAddr,
+			destPort: packet.ip.destPort,
+			packets: []
+		};
+
+		this.streams[this.streams.length] = stream;
+	};
+
+	if (packet.tcp.flags.SYN && !packet.tcp.flags.ACK) {
+		newStream(); 
+		return stream;
+	}
+
+	for (var i=this.streams.length-1; i>=0; i--) {
+		var testStream = this.stream[i];
+		if ((testStream.srcAddr == packet.ip.srcAddr && testStream.srcPort == packet.ip.srcPort &&
+			testStream.destAddr == packet.ip.destAddr && testStream.destPort == packet.ip.destPort) || 
+			(testStream.destAddr == packet.ip.srcAddr && testStream.destPort == packet.ip.srcPort &&
+			testStream.srcAddr == packet.ip.destAddr && testStream.srcPort == packet.ip.destPort)) {
+
+			return testStream;
+		}
+	}
+
+	//Stream not found
+	newStream(); 
+	console.error('Partial stream %j', stream);
+	return stream;
 
 };
 
