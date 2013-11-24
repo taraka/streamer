@@ -115,12 +115,12 @@ Streamer.prototype.fileComplete = function() {
 			var packetData = stream.packets[j].data.toString();
 
 			if (packetData) {
-				if (currentHost != packet.ip.srcAddr + ':' + packet.tcp.srcPort){
+				if (true || currentHost != packet.ip.srcAddr + ':' + packet.tcp.srcPort) {
 					if (currentHost){
 						stream.data += '</pre></div>'
 					}
 					currentHost = packet.ip.srcAddr + ':' + packet.tcp.srcPort;
-					stream.data += '<div class="';
+					stream.data += '<div id="frame-data-' + packet.ip.ident + '" class=" framedata ';
 					stream.data += (currentHost == stream.srcAddr + ':' + stream.srcPort ? 'client-data' : 'server-data');
 				}	stream.data += '"><pre>';
 				stream.data += htmlencode.htmlEncode(packetData);
