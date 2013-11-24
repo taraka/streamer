@@ -14,7 +14,7 @@ Tcp.prototype.parse = function(packet, data) {
 	packet.tcp.flags = this.getTcpFlags(data.readUInt8(13));
 	packet.tcp.ackNum = data.readUInt32BE(8);
 
-	//packet.data = data.slice(headerLength * 4).toString();
+	packet.data = data.slice(headerLength * 4);
 }
 
 Tcp.prototype.getTcpFlags = function(input) {

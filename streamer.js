@@ -1,6 +1,7 @@
 var program = require('commander');
 var pcapp = require('pcap-parser');
 var IpParser = require('./parsers/ip');
+var util = require('util');
 
 var Streamer = function() {
 	program.version('0.0.0')
@@ -22,6 +23,7 @@ Streamer.prototype.start = function() {
 	console.log('Starting packet analysis on file ' + program.file);
 	var parser = pcapp.parse(program.file);
 	parser.on('packet', this.processPacket.bind(this));
+	parser.on('end', this.fileComplete.bind(this));
 };
 
 Streamer.prototype.processPacket = function(packet) {
@@ -30,6 +32,8 @@ Streamer.prototype.processPacket = function(packet) {
 
 	var stream = this.findStream(packet);
 	stream.packets.push(packet);
+
+	stream.packets.inspect = function() {return this.length.toString();};
 
 
 	/*for(var i=0; i<64; i++) {
@@ -43,24 +47,34 @@ Streamer.prototype.processPacket = function(packet) {
 		}
 	}*/
 
-	console.dir(this.streams);
+};
 
+Streamer.prototype.fileComplete = function() {
+
+	/*for (var i=0; i<this.streams.length; i++) {
+		var stream = this.streams[i];
+		console.log(this.streams.length);
+		for (var j=0; j<stream.packets.length; j++) {
+			stream.data += stream.packets[j].data.toString();
+		}
+	}*/
+	console.log(util.inspect(this.streams, 1, 5, 1));
 };
 
 Streamer.prototype.findStream = function(packet) {
 
 	var stream = {};
-	var newStream = function() {
+	var newStream = (function() {
 		stream = {
 			srcAddr: packet.ip.srcAddr,
-			srcPort: packet.ip.srcPort,
+			srcPort: packet.tcp.srcPort,
 			destAddr: packet.ip.destAddr,
-			destPort: packet.ip.destPort,
+			destPort: packet.tcp.destPort,
+			data: '',
 			packets: []
 		};
-
-		this.streams[this.streams.length] = stream;
-	};
+		this.streams.push(stream);
+	}).bind(this);
 
 	if (packet.tcp.flags.SYN && !packet.tcp.flags.ACK) {
 		newStream(); 
@@ -68,11 +82,11 @@ Streamer.prototype.findStream = function(packet) {
 	}
 
 	for (var i=this.streams.length-1; i>=0; i--) {
-		var testStream = this.stream[i];
-		if ((testStream.srcAddr == packet.ip.srcAddr && testStream.srcPort == packet.ip.srcPort &&
-			testStream.destAddr == packet.ip.destAddr && testStream.destPort == packet.ip.destPort) || 
-			(testStream.destAddr == packet.ip.srcAddr && testStream.destPort == packet.ip.srcPort &&
-			testStream.srcAddr == packet.ip.destAddr && testStream.srcPort == packet.ip.destPort)) {
+		var testStream = this.streams[i];
+		if ((testStream.srcAddr == packet.ip.srcAddr && testStream.srcPort == packet.tcp.srcPort &&
+			testStream.destAddr == packet.ip.destAddr && testStream.destPort == packet.tcp.destPort) || 
+			(testStream.destAddr == packet.ip.srcAddr && testStream.destPort == packet.tcp.srcPort &&
+			testStream.srcAddr == packet.ip.destAddr && testStream.srcPort == packet.tcp.destPort)) {
 
 			return testStream;
 		}
